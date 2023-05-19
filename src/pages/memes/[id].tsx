@@ -1,11 +1,10 @@
-import Image from 'next/image'
 import { useState, useEffect } from 'react'
-import { getFirestore, collection, getCountFromServer, query, where, limit, getDocs } from 'firebase/firestore'
-import { getFirebaseApp } from '../utils/firebase.config'
-
+import Image from 'next/image'
 import { useRouter } from 'next/router'
 import { saveAs } from 'file-saver'
-import Button from '../components/button'
+import { getFirestore, getDoc, doc } from 'firebase/firestore'
+import Button from '../../components/button'
+import { getFirebaseApp } from '../../utils/firebase.config'
 
 type Caption = {
   text: string
@@ -31,48 +30,46 @@ export default function RenderMeme() {
     const db = getFirestore(app)
 
     async function getMeme() {
-      const coll = collection(db, "memes");
-      const memeSnapshot = await getCountFromServer(coll);
-      const randomIndex = Math.floor(Math.random() * memeSnapshot.data().count)
-      const randomMemeQuery = query(collection(db, 'memes'), where("random", "==", randomIndex), limit(1));
-      const meme = await getDocs(randomMemeQuery);
+      // retrieve meme based on the id from the url
+      const { id } = router.query
 
-      if (meme.docs.length === 0) {
-        setError('No meme could be found.')
-      }
+      if (id !== undefined) {
+        const memeRef = doc(db, 'memes', id as string)
+        const meme = await getDoc(memeRef)
 
-      else {
-        const memeData = meme.docs[0].data()
+        if (meme.exists() && meme.data().invitation && meme.data().invitation !== '' && meme.data().captions && meme.data().captions.length > 0) {
+          const memeData = meme.data()
 
-        // find any hastaags within the invitation and give them lightblue color in dark mode
-        // and a regular shade of blue in light mode
-        const invitation = memeData.invitation.replace(/(^|\W)(#.*?(?= #|$))/ig, '$1<span class="text-blue-600 dark:text-blue-400">$2</span>')
+          // find any hastaags within the invitation and give them lightblue color in dark mode
+          // and a regular shade of blue in light mode
+          const invitation = memeData.invitation.replace(/(^|\W)(#.*?(?= #|$))/ig, '$1<span class="text-blue-600 dark:text-blue-400">$2</span>')
 
-        // generate meme image from imgflip
-        const imgFlipMemeId = memeData.imgFlipMemeId
-        const captions = memeData.captions.map((caption: Caption) => caption.text)
-        const response = await fetch(`/api/memes/images/create/${imgFlipMemeId}`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ captions }),
-        })
+          // generate meme image from imgflip
+          const imgFlipMemeId = memeData.imgFlipMemeId
+          const captions = memeData.captions.map((caption: Caption) => caption.text)
+          const response = await fetch(`/api/memes/images/create/${imgFlipMemeId}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ captions }),
+          })
 
-        if (!response.ok) {
-          const { error } = await response.json()
-          setError(error)
+          if (!response.ok) {
+            const { error } = await response.json()
+            setError(error)
+          }
+
+          const { memeUrl } = await response.json()
+
+          setMemeData({
+            captions: memeData.captions,
+            imgFlipMemeId: memeData.imgFlipMemeId,
+            created: memeData.created,
+            invitation,
+            memeUrl,
+          })
         }
-
-        const { memeUrl } = await response.json()
-
-        setMemeData({
-          captions: memeData.captions,
-          imgFlipMemeId: memeData.imgFlipMemeId,
-          created: memeData.created,
-          invitation,
-          memeUrl,
-        })
 
         setLoadingStatus(false)
       }
