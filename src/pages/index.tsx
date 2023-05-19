@@ -2,7 +2,7 @@ import Image from 'next/image'
 import { useState, useEffect } from 'react'
 import { getFirestore, collection, getCountFromServer, query, where, limit, getDocs } from 'firebase/firestore'
 import { getFirebaseApp } from '../utils/firebase.config'
-
+import seedRandom from 'seedrandom'
 import { useRouter } from 'next/router'
 import { saveAs } from 'file-saver'
 import Button from '../components/button'
@@ -33,7 +33,11 @@ export default function RenderMeme() {
     async function getMeme() {
       const coll = collection(db, "memes");
       const memeSnapshot = await getCountFromServer(coll);
-      const randomIndex = Math.floor(Math.random() * memeSnapshot.data().count)
+    
+      // generate a random number with seedrandom because Math.random() didn't feel random enough
+      const rng = seedRandom(new Date().toISOString())
+      const randomIndex = Math.floor(rng() * memeSnapshot.data().count);
+
       const randomMemeQuery = query(collection(db, 'memes'), where("random", "==", randomIndex), limit(1));
       const meme = await getDocs(randomMemeQuery);
 
