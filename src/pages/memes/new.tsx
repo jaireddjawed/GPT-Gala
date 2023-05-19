@@ -84,8 +84,18 @@ export default function RenderMeme() {
         </div>
         <div className="mt-6 mb-4">
           <Button type="success" onClick={() => saveAs(meme.memeUrl, 'bcoe-meme.jpg')}>Download Meme</Button>
-          <Button type="primary" onClick={() => router.push('/')}>View Random Meme Previously Generated</Button>
-          <Button type="primary" onClick={() => router.push('/memes/new')}>Generate New Meme with GPT (takes longer)</Button>
+          <Button type="primary" onClick={() => {
+            setLoadingStatus(true)
+            router.push('/')
+          }}>
+            View Random Meme Previously Generated
+          </Button>
+          <Button type="primary" onClick={() => {
+            setLoadingStatus(true)
+            router.push('/memes/new')
+          }}>
+            Generate New Meme with GPT (takes longer)
+          </Button>
         </div>
       </div>
     )
