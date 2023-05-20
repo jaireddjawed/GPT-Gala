@@ -34,22 +34,24 @@ export default function RenderMeme() {
       if (!response.ok) {
         const { error } = await response.json()
         setError(error)
+        setLoadingStatus(false)
       }
+      else {
+        const memeData = await response.json()
 
-      const memeData = await response.json()
+        // find any hashtags within the invitation and give them lightblue color in dark mode
+        // and a regular shade of blue in light mode
+        const invitation = memeData.invitation.replace(/(^|\W)(#.*?(?= #|$))/ig, '$1<span class="text-blue-600 dark:text-blue-400">$2</span>')
 
-      // find any hashtags within the invitation and give them lightblue color in dark mode
-      // and a regular shade of blue in light mode
-      const invitation = memeData.invitation.replace(/(^|\W)(#.*?(?= #|$))/ig, '$1<span class="text-blue-600 dark:text-blue-400">$2</span>')
+        setMemeData({
+          captions: memeData.captions,
+          imgFlipMemeId: memeData.imgFlipMemeId,
+          memeUrl: memeData.memeUrl,
+          invitation,
+        })
 
-      setMemeData({
-        captions: memeData.captions,
-        imgFlipMemeId: memeData.imgFlipMemeId,
-        memeUrl: memeData.memeUrl,
-        invitation,
-      })
-
-      setLoadingStatus(false)
+        setLoadingStatus(false)
+      }
     }
 
     generateMeme()
@@ -103,7 +105,7 @@ export default function RenderMeme() {
 
   else if (error !== null) {
     return (
-      <div>Meme not found</div>
+      <div>{error}</div>
     )
   }
 

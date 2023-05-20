@@ -43,6 +43,7 @@ export default function RenderMeme() {
 
       if (meme.docs.length === 0) {
         setError('No meme could be found.')
+        setLoadingStatus(false)
       }
 
       else {
@@ -133,7 +134,7 @@ export default function RenderMeme() {
 
   else if (error !== null) {
     return (
-      <div>Meme not found</div>
+      <div>{error}</div>
     )
   }
 
