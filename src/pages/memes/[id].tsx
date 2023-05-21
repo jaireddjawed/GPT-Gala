@@ -129,7 +129,7 @@ export default function RenderMeme() {
     )
   }
 
-  else if (error !== null) {
+  else if (error !== null && !isLoading) {
     return (
       <div>{error}</div>
     )
