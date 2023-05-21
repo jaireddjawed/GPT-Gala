@@ -35,11 +35,12 @@ export default function RenderMeme() {
       const memeSnapshot = await getCountFromServer(coll);
     
       // generate a random number with seedrandom because Math.random() didn't feel random enough
-      const rng = seedRandom(new Date().toISOString())
-      const randomIndex = Math.floor(rng() * memeSnapshot.data().count);
+      const randomString = (Math.random() + 1).toString(36).substring(8)
+      const rng = seedRandom(randomString)
+      const randomIndex = Math.floor(rng() * memeSnapshot.data().count)
 
-      const randomMemeQuery = query(collection(db, 'memes'), where("random", "==", randomIndex), limit(1));
-      const meme = await getDocs(randomMemeQuery);
+      const randomMemeQuery = query(collection(db, 'memes'), where("random", "==", randomIndex), limit(1))
+      const meme = await getDocs(randomMemeQuery)
 
       if (meme.docs.length === 0) {
         setError('No meme could be found.')
@@ -132,7 +133,7 @@ export default function RenderMeme() {
     )
   }
 
-  else if (error !== null) {
+  else if (error !== null && !isLoading) {
     return (
       <div>{error}</div>
     )
