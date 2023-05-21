@@ -33,51 +33,51 @@ export default function RenderMeme() {
       // retrieve meme based on the id from the url
       const { id } = router.query
 
-      if (id !== undefined) {
-        const memeRef = doc(db, 'memes', id as string)
-        const meme = await getDoc(memeRef)
+      if (!id) {
+        return
+      }
 
-        if (meme.exists() && meme.data().invitation && meme.data().invitation !== '' && meme.data().captions && meme.data().captions.length > 0) {
-          const memeData = meme.data()
+      const memeRef = doc(db, 'memes', id as string)
+      const meme = await getDoc(memeRef)
 
-          // find any hastaags within the invitation and give them lightblue color in dark mode
-          // and a regular shade of blue in light mode
-          const invitation = memeData.invitation.replace(/(^|\W)(#.*?(?= #|$))/ig, '$1<span class="text-blue-600 dark:text-blue-400">$2</span>')
+      if (meme.exists() && meme.data().invitation && meme.data().invitation !== '' && meme.data().captions && meme.data().captions.length > 0) {
+        const memeData = meme.data()
 
-          // generate meme image from imgflip
-          const imgFlipMemeId = memeData.imgFlipMemeId
-          const captions = memeData.captions.map((caption: Caption) => caption.text)
-          const response = await fetch(`/api/memes/images/create/${imgFlipMemeId}`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ captions }),
-          })
+        // find any hastaags within the invitation and give them lightblue color in dark mode
+        // and a regular shade of blue in light mode
+        const invitation = memeData.invitation.replace(/(^|\W)(#.*?(?= #|$))/ig, '$1<span class="text-blue-600 dark:text-blue-400">$2</span>')
 
-          if (!response.ok) {
-            const { error } = await response.json()
-            setError(error)
-          }
+        // generate meme image from imgflip
+        const imgFlipMemeId = memeData.imgFlipMemeId
+        const captions = memeData.captions.map((caption: Caption) => caption.text)
+        const response = await fetch(`/api/memes/images/create/${imgFlipMemeId}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ captions }),
+        })
 
-          const { memeUrl } = await response.json()
-
-          setMemeData({
-            captions: memeData.captions,
-            imgFlipMemeId: memeData.imgFlipMemeId,
-            created: memeData.created,
-            invitation,
-            memeUrl,
-          })
+        if (!response.ok) {
+          const { error } = await response.json()
+          setError(error)
         }
 
-        setLoadingStatus(false)
-      }
+        const { memeUrl } = await response.json()
 
+        setMemeData({
+          captions: memeData.captions,
+          imgFlipMemeId: memeData.imgFlipMemeId,
+          created: memeData.created,
+          invitation,
+          memeUrl,
+        })
+      }
       else {
         setError('No meme found.')
-        setLoadingStatus(false)
       }
+
+      setLoadingStatus(false)
     }
 
     getMeme()
